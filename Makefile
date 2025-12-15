@@ -6,8 +6,8 @@ image:
 	./scripts/build.sh
 
 run:
-	qemu-system-i386 -drive format=raw,file=disk.img
+	qemu-system-i386 -drive format=raw,file=build/disk.img
 
 clean:
 	$(MAKE) -C kernel clean
-	rm -f boot.bin disk.img
+	rm -f *.bin disk.img

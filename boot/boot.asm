@@ -1,37 +1,65 @@
-; boot.asm - minimal bootloader
-bits 16         ; 16-bit real mode
-org 0x7C00      ; BIOS loads Boot Sector from here
+; boot.asm — loads the loader from sector 2 and jumps to it
+; Assemble: nasm -f bin boot.asm -o build/boot.bin -Ibuild/
 
+[org 0x7C00]
+%include "build/defines.inc"
 
 start:
-    cli         ; diable interrupt flag - disable h/w interrupts
-    mov si, msg ; load the msg address into si register
-    call print  ; call print routine to diplay the msg
-    hlt         ; halt cpu - stop exicution (infinite sleep)
+    ; Preserve boot drive (DL) from BIOS
+    mov [boot_drive], dl
 
-print:
-    lodsb       ; load byte SI into AL, then increment SI
-    or al, al   ; check if al == 0 (null terminator)
-    jz done     ; if zero jump to done
-    mov ah, 0x0E; BIOS teletype function (int 0X10, ah=0x0E) - prints the character in  at the current cursor position and advances the cursor.
-    int 0X10    ; print charcter AL to screen - provide the video services
-    jmp print   ; repeat untill condition hit (al == 0)
+    ; DS must be sane for lodsb in print_string
+    xor ax, ax
+    mov ds, ax
 
-done:
-    ret         ; return from print
+    ; Print boot message
+    mov si, msg_boot
+    call print_string
 
+    ; Reset disk (AH=00)
+    xor ah, ah
+    mov dl, [boot_drive]
+    int 0x13
 
-msg db 'Bootloader: loading kernel...', 0
+    ; Read LOADER_SECTORS starting at CHS sector 2 (1=boot)
+    xor ax, ax
+    mov es, ax
+    mov bx, 0x7E00               ; destination for loader
 
-times 510 - ($ - $$) db 0       ; Boot section must be exactly 512 bytes
+    mov ah, 0x02                 ; BIOS read sectors
+    mov al, LOADER_SECTORS
+    mov ch, 0                    ; cylinder
+    mov dh, 0                    ; head
+    mov cl, 2                    ; sector (1-based: 1=boot, 2=loader start)
+    mov dl, [boot_drive]
+    int 0x13
+    jc disk_error
 
-; where $ - current location counter
-; $$ - start of the section
-; $ - $$ how many bytes we written so far
-; 510 - ($ -$$) how many left untill offset 510
-; db 0 where remaining bytes are zero
-; this ensures the bootloader is correct size
+    ; Jump to loader in real mode
+    jmp 0x0000:0x7E00
 
-dw 0xAA55       ; last 2 bytes of valid boot sector must be 0xAA55 (littel endian)
+disk_error:
+    mov si, msg_disk_error
+    call print_string
+.halt:
+    hlt
+    jmp .halt
 
-; BIOS check this signature to decides if the sector is bootable
+; BIOS teletype (real mode, DS:SI)
+print_string:
+    mov ah, 0x0E
+.next:
+    lodsb
+    test al, al
+    jz .done
+    int 0x10
+    jmp .next
+.done:
+    ret
+
+msg_boot       db "Boot: loading loader...", 0x0D, 0x0A, 0
+msg_disk_error db "Disk read error!", 0x0D, 0x0A, 0
+boot_drive     db 0
+
+times 510-($-$$) db 0
+dw 0xAA55

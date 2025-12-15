@@ -1,25 +1,9 @@
-ENTRY(kernelMain)
-
-
+ENTRY(start)
 SECTIONS {
-    . = 0x100000;
+    . = 0x1000;
 
-    .text : AT(0x100000) {
-        *(.text)
-    }
-
-    .rodata : {
-        *(.rodata)
-    }
-
-    .data : {
-        *(.data*)
-    }
-
-    .bss : {
-        *(.bss)
-        *(COMMON)
-    }
-
-    . = ALIGN(4096);
+    .text : { *(.text*) }
+    .rodata : { *(.rodata*) }
+    .data : { *(.data*) }
+    .bss  : { *(.bss*) *(COMMON) }
 }

@@ -1,0 +1,4 @@
+%define LOADER_SECTORS 1
+%define KERNEL_START 2
+%define KERNEL_SECTORS 3
+%define KERNEL_BYTES 1536
