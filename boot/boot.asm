@@ -3,13 +3,13 @@ bits 16         ; 16-bit real mode
 org 0x7C00      ; BIOS loads Boot Sector from here
 
 
-strat :
+start:
     cli         ; diable interrupt flag - disable h/w interrupts
     mov si, msg ; load the msg address into si register
     call print  ; call print routine to diplay the msg
     hlt         ; halt cpu - stop exicution (infinite sleep)
 
-print :
+print:
     lodsb       ; load byte SI into AL, then increment SI
     or al, al   ; check if al == 0 (null terminator)
     jz done     ; if zero jump to done
@@ -17,7 +17,7 @@ print :
     int 0X10    ; print charcter AL to screen - provide the video services
     jmp print   ; repeat untill condition hit (al == 0)
 
-done :
+done:
     ret         ; return from print
 
 
