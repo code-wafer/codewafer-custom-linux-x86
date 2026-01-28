@@ -15,3 +15,10 @@ This project is a bare-minimal operating system built from scratch for learning 
 - Write a freestanding kernel in C.
 - Learn linker scripts and memory layout.
 - Expand step by step: drivers, interrupts, paging, shell.
+
+
+## 📘 Learning Resources
+- JSON & XML in Embedded Linux: Full-Stack Guide
+  Link: https://codewafer.com/blogs/json-xml-in-embedded-linux-full-stack-guide-with-drivers-middleware/
+  Layer-by-layer walkthrough with drivers, middleware, and real code examples (I²C, sysfs, cJSON, libxml2).
+
